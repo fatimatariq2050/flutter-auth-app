@@ -16,12 +16,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   bool obscurePassword = true;
 
+  // ===== LOGIN FUNCTION =====
   Future<void> loginUser() async {
+    // Step 1: Empty check
     if (emailController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter both email and password')),
-      );
+      showTopBanner(context, 'Please enter both email and password');
       return;
     }
 
@@ -50,14 +50,63 @@ class _LoginScreenState extends State<LoginScreen> {
         message = 'Invalid email or password';
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      showTopBanner(context, message);
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
   }
 
+  // ===== TOP BANNER FUNCTION (loginUser ke bahar) =====
+  void showTopBanner(BuildContext context, String message) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+                top: MediaQuery.of(context).padding.top + 20,
+        left: MediaQuery.of(context).size.width * 0.15,
+        right: MediaQuery.of(context).size.width * 0.15,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+    Future.delayed(const Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
+  // ===== BUILD METHOD =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,6 +163,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 30),
+
+                  // ===== EMAIL FIELD =====
                   TextField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -129,9 +180,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  // ===== PASSWORD FIELD (Enter key support) =====
                   TextField(
                     controller: passwordController,
                     obscureText: obscurePassword,
+                    onSubmitted: (value) {
+                      loginUser();
+                    },
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
@@ -151,6 +207,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
+
+                  // ===== LOGIN BUTTON =====
                   isLoading
                       ? const CircularProgressIndicator(
                           color: Color(0xFF6A3DE8))
@@ -174,6 +232,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                   const SizedBox(height: 18),
+
+                  // ===== SIGN UP BUTTON =====
                   TextButton(
                     onPressed: () {
                       Navigator.push(
